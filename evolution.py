@@ -36,7 +36,17 @@ class Evolution():
             # TODO (additional): a selection method other than `fitness proportionate`
             # TODO (additional): implementing crossover
 
-            new_players = prev_players
+            # select parents based on fitness proportionate
+            # method: Rolette Wheel
+            parents = self.rolette_wheel_algorithm(prev_players, num_players)
+            # method: SUS
+            # parents = self.stochastic_universal_sampling_algorithm(prev_players, num_players)
+
+            # generate children
+            new_players = (parents).copy()
+            for player in new_players:
+                self.mutate(player)
+
             return new_players
 
     def next_population_selection(self, players, num_players):
