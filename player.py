@@ -92,7 +92,7 @@ class Player():
         if mode == 'gravity':
             layer_sizes = [6, 20, 1]
         elif mode == 'helicopter':
-            layer_sizes = [6, 20, 1]
+            layer_sizes = [5, 20, 1]
         elif mode == 'thrust':
             layer_sizes = [6, 20, 1]
         return layer_sizes
@@ -100,13 +100,42 @@ class Player():
     
     def think(self, mode, box_lists, agent_position, velocity):
 
-        # TODO
+        # TODO: find direction
         # mode example: 'helicopter'
         # box_lists: an array of `BoxList` objects
         # agent_position example: [600, 250]
         # velocity example: 7
 
-        direction = -1
+        height = CONFIG['HEIGHT']
+        width  = CONFIG['WIDTH']
+        
+        x = agent_position[0]
+        y = agent_position[1]
+
+        # create list of input_layer values
+        input_values = np.zeros((5, 1))
+        input_values[0, 0] = velocity / 10
+        if(len(box_lists) >= 1):
+            x_box = box_lists[0].x
+            y_box = box_lists[0].gap_mid
+            input_values[1, 0] = (x_box - x) / width
+            input_values[2, 0] = (y_box - y) / height
+            if(len(box_lists) >= 2):
+                x_next_box = box_lists[1].x
+                y_next_box = box_lists[1].gap_mid
+                input_values[3, 0] = (x_next_box - x) / width
+                input_values[4, 0] = (y_next_box - y) / height
+
+        # calculate output of neural network
+        output_value = self.nn.forward(input_values)
+
+        # set value for direction based on mode and output_value
+        if(mode == 'helicopter'):
+            if(output_value > 0.5):
+                direction = 1
+            else:
+                direction = -1    
+
         return direction
 
     def collision_detection(self, mode, box_lists, camera):
