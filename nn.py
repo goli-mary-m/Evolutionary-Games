@@ -25,7 +25,7 @@ class NeuralNetwork():
         
         # TODO: implement Sigmoid function
 
-        sigmoid_output = 1 / (1 + np.exp(-x))
+        sigmoid_output = 1 / (1 + np.exp(-1 * x))
         return sigmoid_output
 
     def forward(self, x):

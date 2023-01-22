@@ -2,6 +2,7 @@ from player import Player
 import numpy as np
 from numpy import random
 from config import CONFIG
+import copy
 
 
 class Evolution():
@@ -18,8 +19,19 @@ class Evolution():
 
         # TODO
         # child: an object of class `Player`
-        pass
+        W_shape1 = child.nn.W_layer1.shape
+        W_shape2= child.nn.W_layer2.shape
 
+        b_shape1 = child.nn.b_layer1.shape
+        b_shape2 = child.nn.b_layer2.shape
+
+        gaussian_noise = 0.8
+        child.nn.W_layer1 += random.normal(0, gaussian_noise, W_shape1)
+        child.nn.W_layer2 += random.normal(0, gaussian_noise, W_shape2)
+
+        child.nn.b_layer1 += random.normal(0, gaussian_noise, b_shape1)
+        child.nn.b_layer2 += random.normal(0, gaussian_noise, b_shape2)        
+        return child
 
     def generate_new_population(self, num_players, prev_players=None):
 
@@ -28,7 +40,7 @@ class Evolution():
             return [Player(self.mode) for _ in range(num_players)]
 
         else:
-
+            new_child = []
             # TODO
             # num_players example: 150
             # prev_players: an array of `Player` objects
@@ -36,18 +48,56 @@ class Evolution():
             # TODO (additional): a selection method other than `fitness proportionate`
             # TODO (additional): implementing crossover
 
-            # select parents based on fitness proportionate
-            # method: Rolette Wheel
-            parents = self.rolette_wheel_algorithm(prev_players, num_players)
-            # method: SUS
+            'method: Top K Selection'
+            parents = self.top_k_algorithm(prev_players, num_players)
+
+            'method: Rolette Wheel: select parents based on fitness proportionate'
+            # parents = self.rolette_wheel_algorithm(prev_players, num_players)
+           
+            'method: SUS'
             # parents = self.stochastic_universal_sampling_algorithm(prev_players, num_players)
 
+            pairs = list(zip(parents[::2], parents[1::2]))
+            for pair in pairs:
+                crossover_children = self.crossover(*pair)
+                mutated_cross_children = self.mutate(crossover_children)
+                new_child.append(mutated_cross_children)
             # generate children
-            new_players = (parents).copy()
-            for player in new_players:
-                self.mutate(player)
+            # new_players = (parents).copy()
+            # for player in new_players:
+            #     new_child.append(self.mutate(player))
 
-            return new_players
+            return new_child
+
+    def crossover(self, player1, player2):
+        new_player = Player(self.game_mode)
+        new_player.nn = copy.deepcopy(player1.nn)
+        new_player.fitness = player1.fitness
+
+        W_shape1 = new_player.nn.W_layer1.shape
+        b_shape1 = player2.nn.b_layer1.shape
+
+        W_shape2 = new_player.nn.W_layer2.shape
+        b_shape2 = player2.nn.b_layer2.shape
+
+        player1_W1 = player1.nn.W_layer1.shape
+        player1_b1 = player2.nn.b_layer1.shape
+
+        player1_W2 = player1.nn.W_layer2.shape
+        player1_b2 = player2.nn.b_layer2.shape
+
+        player2_W1 = player1.nn.W_layer1.shape
+        player2_b1 = player2.nn.b_layer1.shape
+
+        player2_W2 = player1.nn.W_layer2.shape
+        player2_b2 = player2.nn.b_layer2.shape
+
+        # for i in range(W_shape1[1]):
+            # if random.uniform(0, 1) > 0:
+                # if i % 4 < 2:
+                    # new_player.nn.W_layer1[:, i] = player1_W[:, i]
+                # else:
+                    # new_player.nn.W_layer1[:, i] = player1_W[:, i]
 
     def next_population_selection(self, players, num_players):
 
@@ -59,10 +109,10 @@ class Evolution():
         # TODO (additional): plotting
         
         'Implementing top-k algorithm'
-        selected_next_population = self.top_k_algorithm(players, num_players)
+        # selected_next_population = self.top_k_algorithm(players, num_players)
         
         'Implement roulette wheel'
-        # selected_next_population = self.rolette_wheel_algorithm(players, num_players)
+        selected_next_population = self.rolette_wheel_algorithm(players, num_players)
 
         'Implement SUS'
         # selected_next_population = self.stochastic_universal_sampling_algorithm(players, num_players)
@@ -76,11 +126,9 @@ class Evolution():
         return top_k_players
     
     def rolette_wheel_algorithm(self, players, num_players):
-        # Computes the totallity of the population fitness
-        players_fitness = sum([p.fitness for p in players])
-        # Computes for each chromosome the probability 
-        players_probs = [p.fitness/players_fitness for p in players]
-        selected_indices = np.random.choice(players, num_players, p=players_probs)
+        max_fitness = sum([p.fitness for p in players])         # Computes the totallity of the population fitness
+        players_probs = [p.fitness/max_fitness for p in players]           # Computes for each chromosome the probability 
+        selected_indices = np.random.choice(len(players), num_players, p=players_probs)
         selected_players = [players[i] for i in selected_indices]
         return selected_players
 
