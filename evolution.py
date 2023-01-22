@@ -3,7 +3,7 @@ import numpy as np
 from numpy import random
 from config import CONFIG
 import copy
-
+import math
 
 class Evolution():
 
@@ -33,6 +33,17 @@ class Evolution():
         child.nn.b_layer2 += random.normal(0, gaussian_noise, b_shape2)        
         return child
 
+    def crossover(self, parent1_vector, parent2_vector, child1_vector, child2_vector):
+        size = parent1_vector.shape
+        crossover_point = math.floor(size[0]/2)
+
+        # change vector in child 1 
+        child1_vector[ : crossover_point] = parent1_vector[ : crossover_point]
+        child1_vector[crossover_point : ] = parent2_vector[crossover_point : ]
+        # change vector in child 2
+        child2_vector[ : crossover_point] = parent2_vector[ : crossover_point]
+        child2_vector[crossover_point : ] = parent1_vector[crossover_point : ]
+
     def generate_new_population(self, num_players, prev_players=None):
 
         # in first generation, we create random players
@@ -40,7 +51,6 @@ class Evolution():
             return [Player(self.mode) for _ in range(num_players)]
 
         else:
-            new_child = []
             # TODO
             # num_players example: 150
             # prev_players: an array of `Player` objects
@@ -57,47 +67,25 @@ class Evolution():
             'method: SUS'
             # parents = self.stochastic_universal_sampling_algorithm(prev_players, num_players)
 
-            pairs = list(zip(parents[::2], parents[1::2]))
-            for pair in pairs:
-                crossover_children = self.crossover(*pair)
-                mutated_cross_children = self.mutate(crossover_children)
-                new_child.append(mutated_cross_children)
-            # generate children
-            # new_players = (parents).copy()
-            # for player in new_players:
-            #     new_child.append(self.mutate(player))
+            new_players = []
+            for i in range(0, len(parents), 2):
+                parent1 = parents[i]
+                parent2 = parents[i + 1]
+                child1  = Player(self.mode)
+                child2  = Player(self.mode)
+                
+                self.crossover(parent1.nn.W_layer1, parent2.nn.W_layer1, child1.nn.W_layer1, child2.nn.W_layer1)
+                self.crossover(parent1.nn.W_layer2, parent2.nn.W_layer2, child1.nn.W_layer2, child2.nn.W_layer2)
+                self.crossover(parent1.nn.b_layer1, parent2.nn.b_layer1, child1.nn.b_layer1, child2.nn.b_layer1)
+                self.crossover(parent1.nn.b_layer2, parent2.nn.b_layer2, child1.nn.b_layer2, child2.nn.b_layer2)
 
-            return new_child
+                self.mutate(child1)
+                self.mutate(child2)
 
-    def crossover(self, player1, player2):
-        new_player = Player(self.game_mode)
-        new_player.nn = copy.deepcopy(player1.nn)
-        new_player.fitness = player1.fitness
+                new_players.append(child1)
+                new_players.append(child2)
 
-        W_shape1 = new_player.nn.W_layer1.shape
-        b_shape1 = player2.nn.b_layer1.shape
-
-        W_shape2 = new_player.nn.W_layer2.shape
-        b_shape2 = player2.nn.b_layer2.shape
-
-        player1_W1 = player1.nn.W_layer1.shape
-        player1_b1 = player2.nn.b_layer1.shape
-
-        player1_W2 = player1.nn.W_layer2.shape
-        player1_b2 = player2.nn.b_layer2.shape
-
-        player2_W1 = player1.nn.W_layer1.shape
-        player2_b1 = player2.nn.b_layer1.shape
-
-        player2_W2 = player1.nn.W_layer2.shape
-        player2_b2 = player2.nn.b_layer2.shape
-
-        # for i in range(W_shape1[1]):
-            # if random.uniform(0, 1) > 0:
-                # if i % 4 < 2:
-                    # new_player.nn.W_layer1[:, i] = player1_W[:, i]
-                # else:
-                    # new_player.nn.W_layer1[:, i] = player1_W[:, i]
+            return new_players
 
     def next_population_selection(self, players, num_players):
 
