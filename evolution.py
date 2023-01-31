@@ -2,7 +2,7 @@ from player import Player
 import numpy as np
 from numpy import random
 from config import CONFIG
-import copy
+from copy import copy
 import math
 
 class Evolution():
@@ -37,12 +37,18 @@ class Evolution():
         size = parent1_vector.shape
         crossover_point = math.floor(size[0]/2)
 
-        # change vector in child 1 
-        child1_vector[ : crossover_point] = parent1_vector[ : crossover_point]
-        child1_vector[crossover_point : ] = parent2_vector[crossover_point : ]
-        # change vector in child 2
-        child2_vector[ : crossover_point] = parent2_vector[ : crossover_point]
-        child2_vector[crossover_point : ] = parent1_vector[crossover_point : ]
+        p_crossover = 0.7
+        random_number = random.random()
+        if(random_number < p_crossover):
+            # change vector in child 1 
+            child1_vector[ : crossover_point] = parent1_vector[ : crossover_point]
+            child1_vector[crossover_point : ] = parent2_vector[crossover_point : ]
+            # change vector in child 2
+            child2_vector[ : crossover_point] = parent2_vector[ : crossover_point]
+            child2_vector[crossover_point : ] = parent1_vector[crossover_point : ]
+        else:
+            child1_vector = copy(parent1_vector)
+            child2_vector = copy(parent2_vector)   
 
     def generate_new_population(self, num_players, prev_players=None):
 
@@ -59,13 +65,10 @@ class Evolution():
             # TODO (additional): implementing crossover
 
             'method: Top K Selection'
-            parents = self.top_k_algorithm(prev_players, num_players)
+            # parents = self.top_k_algorithm(prev_players, num_players)
 
             'method: Rolette Wheel: select parents based on fitness proportionate'
-            # parents = self.rolette_wheel_algorithm(prev_players, num_players)
-           
-            'method: SUS'
-            # parents = self.stochastic_universal_sampling_algorithm(prev_players, num_players)
+            parents = self.rolette_wheel_algorithm(prev_players, num_players)
 
             new_players = []
             for i in range(0, len(parents), 2):
@@ -105,7 +108,6 @@ class Evolution():
         'Implement SUS'
         # selected_next_population = self.stochastic_universal_sampling_algorithm(players, num_players)
 
-        # Implement Q-tournament
         return selected_next_population
     
     def top_k_algorithm(self, players, num_players):

@@ -90,11 +90,11 @@ class Player():
 
         layer_sizes = None
         if mode == 'gravity':
-            layer_sizes = [6, 20, 1]
+            layer_sizes = [5, 20, 1]
         elif mode == 'helicopter':
             layer_sizes = [5, 20, 1]
         elif mode == 'thrust':
-            layer_sizes = [6, 20, 1]
+            layer_sizes = [5, 20, 1]
         return layer_sizes
 
     
@@ -130,7 +130,7 @@ class Player():
         output_value = self.nn.forward(input_values)
 
         # set value for direction based on mode and output_value
-        if(mode == 'helicopter'):
+        if(mode == 'helicopter' or mode == 'gravity'):
             if(output_value > 0.5):
                 direction = 1
             else:
